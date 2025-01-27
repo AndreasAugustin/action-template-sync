@@ -271,6 +271,7 @@ jobs:
 | steps | `[optional] add the steps you want to execute within the action` | `false` | all steps will be executed |
 | template_sync_ignore_file_path | `[optional] set the path to the ignore file.` | false |`.templatesyncignore` |
 | is_with_tags | `[optional]` set to `true` if tags should be synced | `false` | `false` |
+| target_github_token | `[optional]` used for the target github repo token | `false` | `${{ github.token }}` |
 
 ### Action Outputs
 

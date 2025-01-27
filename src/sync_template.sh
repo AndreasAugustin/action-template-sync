@@ -23,6 +23,10 @@ if [[ -z "${SOURCE_REPO}" ]]; then
   exit 1;
 fi
 
+if [[ -z "${GITHUB_SERVER_URL}" ]]; then
+  err "Missing env variable 'GITHUB_SERVER_URL' of the target github server. E.g. https://github.com"
+fi
+
 if ! [ -x "$(command -v gh)" ]; then
   err "github-cli gh is not installed. 'https://github.com/cli/cli'";
   exit 1;
@@ -33,6 +37,7 @@ if [[ -z "${TEMPLATE_SYNC_IGNORE_FILE_PATH}" ]]; then
   exit 1;
 fi
 
+info "prechecks passed"
 ########################################################
 # Variables
 ########################################################
@@ -83,8 +88,10 @@ debug "PR_BODY ${PR_BODY}"
 # Check if the Ignore File exists inside .github folder or if it doesn't exist at all
 if [[ -f ".github/${TEMPLATE_SYNC_IGNORE_FILE_PATH}" || ! -f "${TEMPLATE_SYNC_IGNORE_FILE_PATH}" ]]; then
   debug "using ignore file as in .github folder"
-    TEMPLATE_SYNC_IGNORE_FILE_PATH=".github/${TEMPLATE_SYNC_IGNORE_FILE_PATH}"
+  TEMPLATE_SYNC_IGNORE_FILE_PATH=".github/${TEMPLATE_SYNC_IGNORE_FILE_PATH}"
 fi
+
+info "variables done"
 
 #####################################################
 # Functions
@@ -243,11 +250,22 @@ function pull_source_changes() {
 
   eval "git pull ${source_repo} --tags ${git_remote_pull_params}" || pull_has_issues=true
 
+  info "finished pulling from the source."
+  info "logging out from source ${SOURCE_REPO_HOSTNAME}."
+
+  if [[ -n "${SRC_SSH_PRIVATEKEY_ABS_PATH}" ]] &>/dev/null; then
+    info "we are using ssh for the source repo. No need to logout."
+  elif [[ -n "${SOURCE_GH_TOKEN}" ]] &>/dev/null; then    
+    gh auth switch      
+  fi
+
   if [ "$pull_has_issues" == true ] ; then
     warn "There had been some git pull issues."
     warn "Maybe a merge issue."
     warn "We go on but it is likely that you need to fix merge issues within the created PR."
   fi
+
+
 }
 
 #######################################
